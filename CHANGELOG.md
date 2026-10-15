@@ -1,0 +1,29 @@
+# Changelog
+
+All notable changes to Regenboog Rekenen. Every release is a git tag `vX.Y.Z` that publishes the image `ghcr.io/jorann/rekenen:X.Y.Z`.
+The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
+
+## [Unreleased]
+
+### Changed
+
+- The license now names Joran as the copyright holder, and a NOTICE file carries that credit along with any copy of the code.
+
+## [1.0.0] - 2026-10-15
+
+First release.
+
+### Added
+
+- Practice addition and subtraction up to 100 (never a negative answer) and the times tables 1 to 10. +, − and × can be mixed.
+- Start screen to choose the kind of sums, the number range for + and − (20, 50 or 100), which times tables, the sums per round and the number of rounds.
+- Large on-screen number pad for the iPad. A wrong answer shows right away and she can try again as often as she needs.
+- A short celebration after every round (rainbow ride, balloons or spinning star) and a big finale after the last round.
+- Sound effects with a mute button, and a question before stopping a game halfway.
+- Every session, sum and answer is saved to Postgres, with how long each sum took. Time while the iPad is locked doesn't count.
+- Results wait on the iPad until the server is reachable, so a Wi-Fi drop loses nothing.
+- The player is always Nomi. The name field can be turned back on with `ASK_NAME` in `client/src/config.ts`.
+- A Docker image is published to GitHub for every version tag, with a production compose file to run it on a server.
+
+[Unreleased]: https://github.com/Jorann/rekenen/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/Jorann/rekenen/releases/tag/v1.0.0
