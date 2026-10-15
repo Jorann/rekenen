@@ -1,0 +1,20 @@
+{
+  "name": "rekenen",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "client",
+    "server"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,client -c magenta,cyan \"npm run dev -w server\" \"npm run dev -w client\"",
+    "build": "npm run build -w client",
+    "start": "npm run start -w server",
+    "test": "npm test -w client",
+    "typecheck": "npm run typecheck -w client && npm run typecheck -w server",
+    "db:up": "docker compose up -d db"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.6"
+  }
+}

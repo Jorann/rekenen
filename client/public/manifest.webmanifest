@@ -1,0 +1,13 @@
+{
+  "name": "Regenboog Rekenen",
+  "short_name": "Rekenen",
+  "lang": "nl",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffd6ec",
+  "theme_color": "#ffd6ec",
+  "icons": [
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
