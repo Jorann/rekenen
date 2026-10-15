@@ -5,6 +5,10 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Added
+
+- Every release gets a page under Releases on GitHub, with that version's changelog as its notes.
+
 ### Changed
 
 - The license now names Joran as the copyright holder, and a NOTICE file carries that credit along with any copy of the code.

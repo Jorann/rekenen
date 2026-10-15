@@ -14,7 +14,7 @@ A pushed `v*` tag publishes the Docker image; the Release workflow fails if `CHA
 1. Pick the version with semver: patch for fixes, minor for new features, major for changes that need action on the server (e.g. config or data changes).
 2. In `CHANGELOG.md`, rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD`, add a fresh empty `## [Unreleased]` above it, and update the compare links at the bottom.
 3. Commit as `Release vX.Y.Z`, push `master`, then `git tag -a vX.Y.Z -m "Regenboog Rekenen X.Y.Z"` and push the tag.
-4. Watch the Release workflow (`gh run watch`) and report the result.
+4. Watch the Release workflow (`gh run watch`) and report the result. It publishes the image, then creates the GitHub release with that version's changelog section as notes (`.github/release-notes.sh`).
 
 ## Data
 

@@ -1,6 +1,7 @@
 # Publishes the app as a Docker image to ghcr.io/jorann/rekenen when a version tag is pushed:
 #   git tag v1.2.0 && git push origin v1.2.0
 # produces the tags 1.2.0, 1.2, 1 and latest (pre-releases like v1.3.0-rc1 don't move latest).
+# It then creates a GitHub release with that version's CHANGELOG.md section as the notes.
 name: Release
 
 on:
@@ -16,9 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Changelog has an entry for this version
-        run: |
-          version="${GITHUB_REF_NAME#v}"
-          grep -qF "## [$version]" CHANGELOG.md || { echo "::error::CHANGELOG.md has no '## [$version]' section"; exit 1; }
+        run: sh .github/release-notes.sh "${GITHUB_REF_NAME#v}" > /dev/null
       - uses: actions/setup-node@v7
         with:
           node-version: 24
@@ -60,3 +59,21 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
+
+  # Once the image is out, publish a GitHub release whose notes are this version's changelog section.
+  release:
+    needs: image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+      - name: Create GitHub release from the changelog
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          sh .github/release-notes.sh "$version" > notes.md
+          prerelease=""
+          case "$version" in *-*) prerelease="--prerelease" ;; esac
+          gh release create "$GITHUB_REF_NAME" --verify-tag --title "Regenboog Rekenen $version" --notes-file notes.md $prerelease
