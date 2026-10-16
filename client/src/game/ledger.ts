@@ -48,7 +48,7 @@ export function balanceOf(p: ServerProfile): number {
 
 /**
  * The profile with one outbox job applied, the way the server will apply it.
- * confirmed: the server already accepted the job, so it has checked the balance itself.
+ * confirmed: the server has just stored this purchase (it checked the balance and the rules itself).
  */
 export function applyJob(p: ServerProfile, job: Job, confirmed = false): ServerProfile {
   switch (job.meta?.kind) {
@@ -58,8 +58,7 @@ export function applyJob(p: ServerProfile, job: Job, confirmed = false): ServerP
       const body = job.body as { id: string; itemId: string; purchasedAt: string };
       const item = itemById(body.itemId);
       if (!item || p.purchases.some((x) => x.id === body.id)) return p;
-      const decision = decidePurchase(body.itemId, new Set(p.purchases.map((x) => x.itemId)), confirmed ? Infinity : balanceOf(p));
-      if (decision !== 'ok') return p;
+      if (!confirmed && decidePurchase(body.itemId, new Set(p.purchases.map((x) => x.itemId)), balanceOf(p)) !== 'ok') return p;
       const purchase = { id: body.id, itemId: body.itemId, price: item.price, purchasedAt: body.purchasedAt };
       return { ...p, spent: p.spent + item.price, purchases: [...p.purchases, purchase] };
     }

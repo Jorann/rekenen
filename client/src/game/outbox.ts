@@ -10,6 +10,8 @@ export interface Job {
   body: unknown;
   /** What the job means for the coins and the shop, so the profile can count it before the server has it. */
   meta?: JobMeta;
+  /** Sent at least once: the server may have it already, even if no answer came back. */
+  attempted?: boolean;
 }
 
 export type JobMeta =
@@ -17,7 +19,7 @@ export type JobMeta =
   | { kind: 'purchase'; player: string }
   | { kind: 'state'; player: string; key: string };
 
-export type OutboxEvent = { type: 'queued' | 'sent' | 'dropped'; job: Job } | { type: 'idle' };
+export type OutboxEvent = { type: 'queued' | 'dropped'; job: Job } | { type: 'sent'; job: Job; status: number } | { type: 'idle' };
 
 const KEY = 'rekenen.outbox';
 let queue: Job[] = load<Job[]>(KEY, []);
@@ -77,6 +79,10 @@ async function flush(): Promise<void> {
       let res: Response;
       inFlight = job;
       sends++;
+      if (!job.attempted) {
+        job.attempted = true;
+        save(KEY, queue);
+      }
       try {
         res = await fetch(job.url, {
           method: 'POST',
@@ -101,7 +107,7 @@ async function flush(): Promise<void> {
       queue = queue.filter((j) => j !== job);
       save(KEY, queue);
       retryDelay = 2000;
-      emit({ type: sent ? 'sent' : 'dropped', job });
+      emit(sent ? { type: 'sent', job, status: res.status } : { type: 'dropped', job });
     }
     emit({ type: 'idle' });
   } finally {

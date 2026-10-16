@@ -21,7 +21,8 @@ export function BuyDialog({
   itemId: string;
   color?: string;
   onClose: () => void;
-  onBought: (itemId: string) => void;
+  /** purchaseId: this purchase, e.g. to find a place for it in the garden. */
+  onBought: (itemId: string, purchaseId: string) => void;
 }) {
   const item = itemById(itemId)!;
   const [bought, setBought] = useState(false);
@@ -37,16 +38,16 @@ export function BuyDialog({
   useEffect(() => () => clearTimeout(done.current), []);
 
   function buy() {
-    if (player.buy(itemId) !== 'ok') {
+    const { decision, purchaseId } = player.buy(itemId);
+    if (decision !== 'ok' || !purchaseId) {
       sound.nope();
       onClose();
       return;
     }
-    if (isGoal) player.setGoal(null);
     sound.buy();
     purchaseBurst(thumbRef.current);
     setBought(true);
-    done.current = setTimeout(() => latestOnBought.current(itemId), 1500);
+    done.current = setTimeout(() => latestOnBought.current(itemId, purchaseId), 1500);
   }
 
   function wish() {

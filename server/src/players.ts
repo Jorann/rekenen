@@ -42,16 +42,20 @@ async function count(db: PoolClient, sql: string, id: number): Promise<number> {
 
 async function inTransaction<T>(work: (db: PoolClient) => Promise<T>): Promise<T> {
   const db = await pool.connect();
+  let broken: Error | undefined;
   try {
     await db.query('BEGIN');
     const result = await work(db);
     await db.query('COMMIT');
     return result;
   } catch (err) {
-    await db.query('ROLLBACK');
+    // If even the rollback fails the connection is broken: report the first error, and don't reuse it.
+    await db.query('ROLLBACK').catch((rollbackErr: Error) => {
+      broken = rollbackErr;
+    });
     throw err;
   } finally {
-    db.release();
+    db.release(broken);
   }
 }
 

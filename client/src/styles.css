@@ -2194,3 +2194,28 @@ button:disabled {
 .drawer-items .item-card .thumb {
   height: 72px;
 }
+
+.loading-card {
+  margin: auto;
+  width: min(90%, 480px);
+  text-align: center;
+}
+
+.loading-icon {
+  display: inline-block;
+  font-size: 72px;
+  animation: hop 2.4s ease-in-out infinite;
+}
+
+.loading-title {
+  margin: 8px 0 4px;
+  font-size: 30px;
+  font-weight: 700;
+  color: var(--purple);
+}
+
+.loading-text {
+  margin: 0;
+  font-size: 20px;
+  color: var(--ink-soft);
+}

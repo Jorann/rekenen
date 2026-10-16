@@ -41,7 +41,8 @@ class ProfileStore {
         return;
       }
       if (event.job.meta?.player !== this.player) return;
-      if (event.type === 'sent') {
+      // A purchase only counts when the server stored it (201); "you have this already" (200) changes nothing.
+      if (event.type === 'sent' && (event.job.meta.kind !== 'purchase' || event.status === 201)) {
         this.base = applyJob(this.base, event.job, true);
         this.persist();
       }
@@ -66,14 +67,14 @@ class ProfileStore {
     this.refreshing = true;
     try {
       for (let tries = 0; tries < 3; tries++) {
-        // While a job is on its way we can't tell whether the server's answer includes it. The outbox
-        // says when it's done ('idle'), and that triggers another refresh.
-        if (isSending()) return;
+        // While a job is on its way, or was sent before without an answer, we can't tell whether the
+        // server's profile includes it. The outbox says when it's done ('idle'), and that triggers another refresh.
+        if (this.unsure()) return;
         const before = sendCount();
         const res = await fetch(`${playerUrl(this.player)}/profile`);
         if (!res.ok) return;
         const data = (await res.json()) as ServerProfile;
-        if (sendCount() !== before || isSending()) continue;
+        if (sendCount() !== before || this.unsure()) continue;
         this.base = { ...EMPTY_PROFILE, ...data };
         this.synced = true;
         this.persist();
@@ -87,21 +88,25 @@ class ProfileStore {
     }
   }
 
+  private unsure(): boolean {
+    return isSending() || pendingJobs().some((j) => j.attempted && j.meta?.player === this.player);
+  }
+
   scheduleRefresh(delayMs: number): void {
     clearTimeout(this.refreshTimer);
     this.refreshTimer = setTimeout(() => void this.refresh(), delayMs);
   }
 
-  buy(itemId: string): PurchaseDecision {
+  buy(itemId: string): { decision: PurchaseDecision; purchaseId?: string } {
     const decision = decidePurchase(itemId, this.view.owned, this.view.balance);
-    if (decision === 'ok') {
-      post(
-        `${playerUrl(this.player)}/purchases`,
-        { id: uuid(), itemId, purchasedAt: new Date().toISOString() },
-        { kind: 'purchase', player: this.player },
-      );
-    }
-    return decision;
+    if (decision !== 'ok') return { decision };
+    const purchaseId = uuid();
+    post(
+      `${playerUrl(this.player)}/purchases`,
+      { id: purchaseId, itemId, purchasedAt: new Date().toISOString() },
+      { kind: 'purchase', player: this.player },
+    );
+    return { decision, purchaseId };
   }
 
   setState(key: StateKey, value: unknown): void {

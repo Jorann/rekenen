@@ -9,6 +9,7 @@ import { GARDEN, HOUSES, thingPaint } from '../home/drawings.tsx';
 import type { HomeState, Spot } from '../home/home.ts';
 import { BuyDialog, Price } from '../shop/BuyDialog.tsx';
 import { coins } from './Coin.tsx';
+import { Loading } from './Loading.tsx';
 import { ScreenBar } from './ScreenBar.tsx';
 import { ItemCard } from './Wardrobe.tsx';
 
@@ -94,10 +95,15 @@ export function Place({ player, focus, onBack }: { player: Player; focus?: strin
   const [moving, setMoving] = useState<Record<string, Spot>>({});
   const [hop, setHop] = useState<{ key: string; n: number } | null>(null);
   const svg = useRef<SVGSVGElement>(null);
-  const drag = useRef<{ key: string; offX: number; offY: number; startX: number; startY: number; moved: boolean } | null>(null);
+  // The finger being dragged. The svg follows it (not the thing itself, which moves in the DOM as it is re-sorted).
+  const drag = useRef<{ key: string; pointerId: number; offX: number; offY: number; startX: number; startY: number; moved: boolean; spot: Spot } | null>(
+    null,
+  );
 
   const placed = useMemo(() => layout(player), [player]);
   const home = player.home;
+
+  if (!player.profile.synced) return <Loading player={player} title="Mijn plekje" onBack={onBack} />;
 
   function saveSpots(changes: Record<string, Spot>, extra?: Partial<HomeState>) {
     const spots = { ...home.spots };
@@ -113,34 +119,39 @@ export function Place({ player, focus, onBack }: { player: Player; focus?: strin
   }
 
   function down(e: ReactPointerEvent, p: Placed) {
-    e.currentTarget.setPointerCapture(e.pointerId);
+    if (drag.current) return; // one thing at a time
+    svg.current!.setPointerCapture(e.pointerId);
     const pt = toGarden(e);
-    drag.current = { key: p.key, offX: pt.x - p.spot.x, offY: pt.y - p.spot.y, startX: e.clientX, startY: e.clientY, moved: false };
+    drag.current = { key: p.key, pointerId: e.pointerId, offX: pt.x - p.spot.x, offY: pt.y - p.spot.y, startX: e.clientX, startY: e.clientY, moved: false, spot: p.spot };
   }
 
-  function move(e: ReactPointerEvent, p: Placed) {
+  function move(e: ReactPointerEvent) {
     const d = drag.current;
-    if (!d || d.key !== p.key) return;
+    if (!d || d.pointerId !== e.pointerId) return;
     if (!d.moved && Math.hypot(e.clientX - d.startX, e.clientY - d.startY) < 8) return;
     d.moved = true;
     const pt = toGarden(e);
-    setMoving({ [p.key]: clamp({ ...p.spot, x: pt.x - d.offX, y: pt.y - d.offY }) });
+    d.spot = clamp({ ...d.spot, x: pt.x - d.offX, y: pt.y - d.offY });
+    setMoving({ [d.key]: d.spot });
   }
 
-  function up(p: Placed) {
+  /** The finger lifted (or the browser took it away): save where the thing ended up, or treat it as a tap. */
+  function end(e: ReactPointerEvent, lifted: boolean) {
     const d = drag.current;
+    if (!d || d.pointerId !== e.pointerId) return;
     drag.current = null;
-    if (!d || d.key !== p.key) return;
+    setMoving({});
     if (d.moved) {
-      const spot = moving[p.key];
-      setMoving({});
-      if (spot) {
-        sound.tap();
-        saveSpots({ [p.key]: spot });
-      }
+      sound.tap();
+      saveSpots({ [d.key]: d.spot });
       return;
     }
-    // A tap: colourable things change colour, the rest give a little hop.
+    const p = placed.find((x) => x.key === d.key);
+    if (p && lifted) tap(p);
+  }
+
+  /** A tap: colourable things change colour, the rest give a little hop. */
+  function tap(p: Placed) {
     const item = itemById(p.itemId);
     if (p.kind === 'thing' && item?.colorable) {
       const i = GARDEN_COLORS.indexOf(p.spot.color ?? GARDEN_COLORS[0]);
@@ -172,7 +183,7 @@ export function Place({ player, focus, onBack }: { player: Player; focus?: strin
     setBuying(itemId);
   }
 
-  function bought(itemId: string) {
+  function bought(itemId: string, purchaseId: string) {
     setBuying(null);
     const item = itemById(itemId)!;
     // Close the shop, so she sees the new thing appear.
@@ -183,8 +194,8 @@ export function Place({ player, focus, onBack }: { player: Player; focus?: strin
       setFresh('house');
       return;
     }
-    // The newest purchase of this item is the one just bought.
-    const purchase = [...player.profile.purchases].reverse().find((p) => p.itemId === itemId);
+    // Not there if the server already refused it.
+    const purchase = player.profile.purchases.find((p) => p.id === purchaseId);
     if (!purchase) return;
     const spot = freeSpot(placed.map((p) => p.spot));
     saveSpots({ [purchase.id]: item.colorable ? { ...spot, color: GARDEN_COLORS[Math.floor(Math.random() * GARDEN_COLORS.length)] } : spot });
@@ -202,7 +213,16 @@ export function Place({ player, focus, onBack }: { player: Player; focus?: strin
       <ScreenBar title="Mijn plekje" coins={player.profile.balance} onBack={onBack} />
 
       <div className="garden">
-        <svg ref={svg} className="garden-svg" viewBox={VIEW} preserveAspectRatio="xMidYMax meet">
+        <svg
+          ref={svg}
+          className="garden-svg"
+          viewBox={VIEW}
+          preserveAspectRatio="xMidYMax meet"
+          onPointerMove={move}
+          onPointerUp={(e) => end(e, true)}
+          onPointerCancel={(e) => end(e, false)}
+          onLostPointerCapture={(e) => end(e, false)}
+        >
           <Landscape hasLand={hasLand} />
           {house && home.house && (
             <g className={fresh === 'house' ? 'pop-in' : undefined} key={home.house}>
@@ -218,12 +238,6 @@ export function Place({ player, focus, onBack }: { player: Player; focus?: strin
                 key={p.key}
                 className={`garden-thing${moving[p.key] ? ' dragging' : ''}`}
                 onPointerDown={(e) => down(e, p)}
-                onPointerMove={(e) => move(e, p)}
-                onPointerUp={() => up(p)}
-                onPointerCancel={() => {
-                  drag.current = null;
-                  setMoving({});
-                }}
               >
                 <g transform={`translate(${p.spot.x} ${p.spot.y}) scale(${depth(p.spot.y)})`}>
                   <g className={`${fresh === p.key ? 'pop-in' : ''}${hop?.key === p.key ? ' hop' : ''}`} key={hop?.key === p.key ? hop.n : 0}>

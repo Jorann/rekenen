@@ -21,6 +21,7 @@ import { load, save } from '../game/storage.ts';
 import { BuyDialog, Price } from '../shop/BuyDialog.tsx';
 import { ItemThumb } from '../shop/ItemThumb.tsx';
 import { coins } from './Coin.tsx';
+import { Loading } from './Loading.tsx';
 import { ScreenBar } from './ScreenBar.tsx';
 
 type TabId = 'me' | 'hair' | 'hat' | 'face' | 'clothes' | 'shoes' | 'extra' | 'pet';
@@ -73,6 +74,8 @@ export function Wardrobe({ player, focus, onBack }: { player: Player; focus?: st
   const moodTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => () => clearTimeout(moodTimer.current), []);
+
+  if (!player.profile.synced) return <Loading player={player} title="Aankleden" onBack={onBack} />;
 
   const saved = player.look;
   const shown = trying ? wear(recolor(saved, trying, tryColors[trying] ?? colorOf(saved, trying)), trying) : saved;

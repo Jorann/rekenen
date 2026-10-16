@@ -83,6 +83,12 @@ describe('applyJob', () => {
     expect(p.purchases.map((x) => x.itemId)).toEqual(['bow']);
   });
 
+  it('keeps a purchase the server stored, even if the cached profile is out of date', () => {
+    // E.g. the land was bought on another iPad, so this one doesn't know the tent is allowed.
+    const p = applyJob(withCoins(0), purchase('tent'), true);
+    expect(p.purchases.map((x) => x.itemId)).toEqual(['tent']);
+  });
+
   it('counts the same purchase only once', () => {
     const job = purchase('tulip');
     const p = applyJob(applyJob({ ...withCoins(500), purchases: [{ id: 'l', itemId: 'land', price: 0, purchasedAt: '' }] }, job), job);
