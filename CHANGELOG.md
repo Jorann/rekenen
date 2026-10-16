@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-10-16
+
 ### Added
 
 - A dashboard for you, in Dutch, as a separate service on port 3001 that reads the same database. It shows how much Nomi practised, how often she gets sums right the first time, and how fast she is, per day or week and compared with the period before.
@@ -46,6 +48,7 @@ First release.
 - The player is always Nomi. The name field can be turned back on with `ASK_NAME` in `client/src/config.ts`.
 - A Docker image is published to GitHub for every version tag, with a production compose file to run it on a server.
 
-[Unreleased]: https://github.com/Jorann/rekenen/compare/v1.1.0...HEAD
+[Unreleased]: https://github.com/Jorann/rekenen/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/Jorann/rekenen/compare/v1.1.0...v1.2.0
 [1.1.0]: https://github.com/Jorann/rekenen/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Jorann/rekenen/releases/tag/v1.0.0
