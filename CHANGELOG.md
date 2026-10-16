@@ -7,10 +7,18 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ### Added
 
+- Nomi earns a coin for every sum she solves, including the sums she already did. During the game each coin flies into her purse, and the end of every round and game shows how many she earned.
+- A new home screen with her own character, her coins and her wish, and three buttons: Rekenen, Aankleden and Mijn plekje.
+- Aankleden: she makes her character (skin, eyes, freckles, eight hairstyles, hair colours) and can try on and buy clothes, dresses, shoes, hats, glasses, wings, things to hold and pets. She picks the colour of most clothes herself. Buying always asks first.
+- Mijn plekje: she saves for a piece of land, then a tent, a wooden house, a cottage or a castle, and a garden with flowers, trees, a swing, a pond, a trampoline and more that she arranges by dragging.
+- For something she can't afford yet she can tap "Dit wil ik!". The home screen and the end of a game show how far she is.
+- You can give her coins as a present with one line of SQL (see the README). She sees a gift message with your note.
+- Her coins and everything she bought are kept on the server, so nothing is lost if the iPad clears its storage. Buying also works without Wi-Fi.
 - Every release gets a page under Releases on GitHub, with that version's changelog as its notes.
 
 ### Changed
 
+- The app opens on the new home screen; the settings screen has a home button to go back. With `ASK_NAME` on, the name is asked on its own screen first.
 - The license now names Joran as the copyright holder, and a NOTICE file carries that credit along with any copy of the code.
 
 ## [1.0.0] - 2026-10-15

@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { ASK_NAME } from '../config.ts';
 import type { GameSettings, Operation } from '../game/questions.ts';
+import { sound } from '../game/sound.ts';
 import { MuteButton } from './MuteButton.tsx';
 
 const OPERATIONS: { op: Operation; symbol: string; label: string }[] = [
@@ -19,16 +19,16 @@ export const DEFAULT_SETTINGS: GameSettings = {
   rounds: 3,
 };
 
+/** What to practise: the parent (or Nomi) picks the kind of sums before a game. */
 export function Setup({
-  initialName,
   initialSettings,
   onStart,
+  onBack,
 }: {
-  initialName: string;
   initialSettings: GameSettings;
-  onStart: (name: string, settings: GameSettings) => void;
+  onStart: (settings: GameSettings) => void;
+  onBack: () => void;
 }) {
-  const [name, setName] = useState(initialName);
   const [s, setS] = useState(initialSettings);
   const update = (patch: Partial<GameSettings>) => setS((prev) => ({ ...prev, ...patch }));
 
@@ -47,11 +47,20 @@ export function Setup({
   const hasAddSub = s.operations.includes('add') || s.operations.includes('sub');
   const hasMul = s.operations.includes('mul');
   const allTables = s.tables.length === ALL_TABLES.length;
-  const trimmed = name.trim();
 
   return (
-    <div className={`setup${ASK_NAME ? ' with-name' : ''}`}>
+    <div className="setup">
       <div className="setup-corner">
+        <button
+          className="icon-btn"
+          onClick={() => {
+            sound.tap();
+            onBack();
+          }}
+          aria-label="Naar huis"
+        >
+          🏠
+        </button>
         <MuteButton />
       </div>
 
@@ -69,24 +78,6 @@ export function Setup({
           🦄
         </div>
       </header>
-
-      {ASK_NAME && (
-        <section className="card name-card">
-          <label className="card-title" htmlFor="name">
-            {trimmed ? `Hoi ${trimmed}!` : 'Hoe heet je?'}
-          </label>
-          <input
-            id="name"
-            className="name-input"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Typ je naam"
-            autoComplete="off"
-            autoCapitalize="words"
-            maxLength={30}
-          />
-        </section>
-      )}
 
       <section className="card ops-card">
         <h2 className="card-title">Wat gaan we oefenen?</h2>
@@ -137,8 +128,8 @@ export function Setup({
         <Stepper label="Rondes" value={s.rounds} min={1} max={10} onChange={(v) => update({ rounds: v })} />
       </section>
 
-      <button className="big-btn start-btn" disabled={!trimmed} onClick={() => onStart(trimmed, s)}>
-        {trimmed ? 'Start! 🌈' : 'Typ eerst je naam ☝️'}
+      <button className="big-btn start-btn" onClick={() => onStart(s)}>
+        Start! 🌈
       </button>
     </div>
   );

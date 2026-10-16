@@ -6,6 +6,7 @@ COPY package.json package-lock.json ./
 COPY client/package.json client/
 COPY server/package.json server/
 RUN npm ci
+COPY shared shared
 COPY client client
 RUN npm run build -w client
 
@@ -16,6 +17,7 @@ COPY package.json package-lock.json ./
 COPY client/package.json client/
 COPY server/package.json server/
 RUN npm ci --omit=dev --workspace server
+COPY shared shared
 COPY server server
 COPY --from=build /app/client/dist client/dist
 EXPOSE 3000

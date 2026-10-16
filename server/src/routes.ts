@@ -1,6 +1,7 @@
 import { Router, type ErrorRequestHandler } from 'express';
 import { z } from 'zod';
 import { pool } from './db.ts';
+import { players } from './players.ts';
 import { createSession, finishSession, solvedQuestion } from './schemas.ts';
 
 export const api = Router();
@@ -72,6 +73,8 @@ api.post('/sessions/:id/finish', async (req, res) => {
   );
   res.json({ id: sessionId });
 });
+
+api.use('/players', players);
 
 // Read endpoints, for the parent dashboard that comes later.
 

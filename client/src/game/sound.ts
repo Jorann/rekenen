@@ -57,6 +57,27 @@ export const sound = {
     [C5, E5, G5, C6].forEach((f, i) => tone(f, i * 0.1, 0.35, 'triangle'));
     tone(E6, 0.45, 0.6, 'triangle', 0.12);
   },
+  /** A coin lands in her purse. */
+  coin: () => {
+    tone(1975.5, 0, 0.09, 'square', 0.035);
+    tone(2637, 0.07, 0.28, 'square', 0.03);
+  },
+  /** Something bought: a cash register "ka-ching" and a sparkle. */
+  buy: () => {
+    tone(1318.5, 0, 0.08, 'square', 0.05);
+    tone(1975.5, 0.08, 0.16, 'square', 0.045);
+    [C6, E6, G6, 2093].forEach((f, i) => tone(f, 0.22 + i * 0.07, 0.3, 'triangle', 0.1));
+  },
+  /** Putting something on. */
+  wear: () => {
+    tone(660, 0, 0.08, 'sine', 0.1);
+    tone(990, 0.05, 0.12, 'sine', 0.08);
+  },
+  /** Not enough coins yet: gentle, not a "wrong" sound. */
+  nope: () => {
+    tone(440, 0, 0.12, 'triangle', 0.08);
+    tone(392, 0.1, 0.18, 'triangle', 0.08);
+  },
   final: () => {
     const melody = [C5, E5, G5, C6, G5, C6, E6, G6];
     melody.forEach((f, i) => tone(f, i * 0.13, 0.4, 'triangle'));

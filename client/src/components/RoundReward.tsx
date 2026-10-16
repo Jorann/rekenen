@@ -1,12 +1,13 @@
 import { useEffect, useState } from 'react';
 import { sound } from '../game/sound.ts';
+import { CoinIcon, coins as coinWord } from './Coin.tsx';
 import { roundBurst } from './effects.ts';
 import { Rainbow } from './Rainbow.tsx';
 
 const TITLES = ['Ronde klaar!', 'Goed gedaan!', 'Wat knap!', 'Je bent een ster!'];
 
 /** Short celebration between rounds. Three variants take turns so it stays a surprise. */
-export function RoundReward({ round, total, onNext }: { round: number; total: number; onNext: () => void }) {
+export function RoundReward({ round, total, coins, onNext }: { round: number; total: number; coins: number; onNext: () => void }) {
   const [canContinue, setCanContinue] = useState(false);
   const variant = (round - 1) % 3;
 
@@ -36,6 +37,9 @@ export function RoundReward({ round, total, onNext }: { round: number; total: nu
           </span>
         ))}
       </div>
+      <p className="reward-coins">
+        <CoinIcon /> +{coinWord(coins)}
+      </p>
       <button className={`big-btn next-btn${canContinue ? ' show' : ''}`} onClick={onNext} disabled={!canContinue}>
         Verder! 🦄
       </button>

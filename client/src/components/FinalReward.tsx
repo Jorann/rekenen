@@ -1,5 +1,9 @@
 import { useEffect, useState } from 'react';
+import { itemById } from '../../../shared/catalog.ts';
+import type { Player } from '../game/player.ts';
 import { sound } from '../game/sound.ts';
+import { Progress } from '../shop/BuyDialog.tsx';
+import { CoinIcon, coins } from './Coin.tsx';
 import { grandFinale } from './effects.ts';
 import { Rainbow } from './Rainbow.tsx';
 
@@ -13,17 +17,24 @@ const FLOATERS = ['🦄', '🌈', '⭐', '💖', '✨', '🦄', '🌟', '💜', 
 
 /** The big celebration after the last round. */
 export function FinalReward({
-  name,
+  player,
   stats,
   onAgain,
   onHome,
+  onWish,
 }: {
-  name: string;
+  player: Player;
   stats: GameStats;
   onAgain: () => void;
   onHome: () => void;
+  /** Go to the shop that sells her wish. */
+  onWish: (itemId: string) => void;
 }) {
   const [showButtons, setShowButtons] = useState(false);
+  const name = player.name;
+  const balance = player.profile.balance;
+  const goal = player.goal ? itemById(player.goal) : undefined;
+  const canBuyWish = !!goal && balance >= goal.price;
 
   useEffect(() => {
     sound.final();
@@ -70,13 +81,32 @@ export function FinalReward({
             <span className="stat-label">in één keer goed</span>
           </div>
         </div>
+        <div className="final-coins">
+          <p className="final-coins-line">
+            <CoinIcon /> Je hebt {coins(stats.solved)} verdiend! Nu heb je er {balance}.
+          </p>
+          {goal && (
+            <div className="final-goal">
+              <span>
+                ⭐ {goal.name}: {balance >= goal.price ? 'je hebt genoeg!' : `nog ${coins(goal.price - balance)}`}
+              </span>
+              <Progress value={balance} max={goal.price} />
+            </div>
+          )}
+        </div>
         <div className={`final-buttons${showButtons ? ' show' : ''}`}>
           <button className="big-btn" onClick={onAgain} disabled={!showButtons}>
             Nog een keer! 🔁
           </button>
-          <button className="big-btn secondary" onClick={onHome} disabled={!showButtons}>
-            Naar het begin 🏠
-          </button>
+          {canBuyWish ? (
+            <button className="big-btn secondary" onClick={() => onWish(goal.id)} disabled={!showButtons}>
+              Mijn wens kopen! ⭐
+            </button>
+          ) : (
+            <button className="big-btn secondary" onClick={onHome} disabled={!showButtons}>
+              Naar huis 🏠
+            </button>
+          )}
         </div>
       </div>
     </div>

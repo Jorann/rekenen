@@ -1,8 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type CSSProperties } from 'react';
 import { activeNow } from '../game/clock.ts';
 import { post } from '../game/outbox.ts';
+import type { Player } from '../game/player.ts';
 import { makeRound, SYMBOL, type GameSettings } from '../game/questions.ts';
 import { sound } from '../game/sound.ts';
+import { CoinBadge, CoinIcon } from './Coin.tsx';
 import { sparkle } from './effects.ts';
 import type { GameStats } from './FinalReward.tsx';
 import { MuteButton } from './MuteButton.tsx';
@@ -22,12 +24,24 @@ interface Attempt {
 
 type Feedback = 'none' | 'wrong' | 'correct';
 
+interface FlyingCoin {
+  id: number;
+  x: number;
+  y: number;
+  dx: number;
+  dy: number;
+}
+
+let coinIds = 0;
+
 export function Game({
+  player,
   settings,
   sessionId,
   onDone,
   onQuit,
 }: {
+  player: Player;
   settings: GameSettings;
   sessionId: string;
   onDone: (stats: GameStats) => void;
@@ -42,12 +56,15 @@ export function Game({
   const [wrongCount, setWrongCount] = useState(0);
   const [showReward, setShowReward] = useState(false);
   const [confirmQuit, setConfirmQuit] = useState(false);
+  const [flying, setFlying] = useState<FlyingCoin[]>([]);
+  const [coinBump, setCoinBump] = useState(0);
 
   const timing = useRef({ shownActive: 0, shownAt: '', attempts: [] as Attempt[] });
   const pausedAt = useRef(0);
   const stats = useRef<GameStats>({ solved: 0, firstTry: 0, rounds: settings.rounds });
   const advanceTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   const answerBox = useRef<HTMLDivElement>(null);
+  const purse = useRef<HTMLDivElement>(null);
 
   const q = questions[index];
 
@@ -100,27 +117,48 @@ export function Game({
 
     sound.correct();
     sparkle(answerBox.current);
+    launchCoin();
     setFeedback('correct');
     setPraise(PRAISE[Math.floor(Math.random() * PRAISE.length)]);
     stats.current.solved += 1;
     if (t.attempts.length === 1) stats.current.firstTry += 1;
 
     const last = t.attempts[t.attempts.length - 1];
-    post(`/api/sessions/${sessionId}/questions`, {
-      id: q.id,
-      roundNumber,
-      position: index + 1,
-      operation: q.op,
-      operandA: q.a,
-      operandB: q.b,
-      correctAnswer: q.answer,
-      shownAt: t.shownAt,
-      solvedAt: last.attemptedAt,
-      durationMs: last.elapsedMs,
-      attempts: t.attempts,
-    });
+    post(
+      `/api/sessions/${sessionId}/questions`,
+      {
+        id: q.id,
+        roundNumber,
+        position: index + 1,
+        operation: q.op,
+        operandA: q.a,
+        operandB: q.b,
+        correctAnswer: q.answer,
+        shownAt: t.shownAt,
+        solvedAt: last.attemptedAt,
+        durationMs: last.elapsedMs,
+        attempts: t.attempts,
+      },
+      { kind: 'coin', player: player.name },
+    );
 
     advanceTimer.current = setTimeout(advance, 1100);
+  }
+
+  /** One coin per solved sum. It flies from the answer to her purse and counts when it lands. */
+  function launchCoin() {
+    const from = answerBox.current?.getBoundingClientRect();
+    const to = purse.current?.querySelector('.coin-icon')?.getBoundingClientRect();
+    if (!from || !to) return;
+    const x = from.left + from.width / 2;
+    const y = from.top + from.height / 2;
+    setFlying((f) => [...f, { id: ++coinIds, x, y, dx: to.left + to.width / 2 - x, dy: to.top + to.height / 2 - y }]);
+  }
+
+  function coinLanded(id: number) {
+    setFlying((f) => f.filter((c) => c.id !== id));
+    setCoinBump((n) => n + 1);
+    sound.coin();
   }
 
   function pressDigit(digit: string) {
@@ -182,7 +220,10 @@ export function Game({
         <div className="round-label">
           Ronde {roundNumber} <span className="of">van {settings.rounds}</span>
         </div>
-        <MuteButton />
+        <div className="topbar-right">
+          <CoinBadge value={player.profile.balance - flying.length} bump={coinBump} ref={purse} />
+          <MuteButton />
+        </div>
       </header>
 
       <div className="progress-stars" aria-label={`${solvedInRound} van de ${questions.length} sommen`}>
@@ -218,7 +259,18 @@ export function Game({
         />
       </main>
 
-      {showReward && <RoundReward round={roundNumber} total={settings.rounds} onNext={nextRound} />}
+      {flying.map((c) => (
+        <span
+          key={c.id}
+          className="flying-coin"
+          style={{ left: c.x, top: c.y, '--dx': `${c.dx}px`, '--dy': `${c.dy}px` } as CSSProperties}
+          onAnimationEnd={() => coinLanded(c.id)}
+        >
+          <CoinIcon />
+        </span>
+      ))}
+
+      {showReward && <RoundReward round={roundNumber} total={settings.rounds} coins={questions.length} onNext={nextRound} />}
 
       {confirmQuit && (
         <div className="overlay confirm">

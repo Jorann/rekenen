@@ -1,7 +1,7 @@
 /**
- * For now the app is just for Nomi, so the start screen doesn't ask for a name.
- * Set ASK_NAME to true to bring back the "Hoe heet je?" field (e.g. when a sibling wants to play too);
- * sessions are stored per name, so each child gets their own history.
+ * For now the app is just for Nomi, so it doesn't ask for a name.
+ * Set ASK_NAME to true to ask "Hoe heet je?" first (e.g. when a sibling wants to play too);
+ * sessions, coins, purchases and characters are stored per name, so each child gets their own.
  */
 export const ASK_NAME = false;
 

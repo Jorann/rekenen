@@ -36,6 +36,16 @@ export function roundBurst(): void {
   }, 250);
 }
 
+let buyShapes: confetti.Shape[] | null = null;
+
+/** A burst of sparkles and hearts from something she just bought. */
+export function purchaseBurst(el: Element | null): void {
+  buyShapes ??= ['✨', '💖', '⭐'].map((text) => confetti.shapeFromText({ text, scalar: 2 }));
+  const origin = originOf(el);
+  void confetti({ particleCount: 90, spread: 110, startVelocity: 38, origin, colors: RAINBOW, zIndex: 200 });
+  void confetti({ particleCount: 16, spread: 120, startVelocity: 30, scalar: 2, flat: true, origin, shapes: buyShapes, zIndex: 200 });
+}
+
 /** Fireworks from both sides for the grand finale. Returns a function that stops them. */
 export function grandFinale(durationMs = 7000): () => void {
   const end = Date.now() + durationMs;
