@@ -4,15 +4,17 @@
   "version": "0.1.0",
   "workspaces": [
     "client",
-    "server"
+    "server",
+    "dashboard"
   ],
   "scripts": {
     "dev": "concurrently -n server,client -c magenta,cyan \"npm run dev -w server\" \"npm run dev -w client\"",
-    "build": "npm run build -w client",
+    "build": "npm run build -w client && npm run build -w dashboard",
     "start": "npm run start -w server",
-    "test": "npm test -w client",
-    "typecheck": "npm run typecheck -w client && npm run typecheck -w server",
-    "db:up": "docker compose up -d db"
+    "test": "npm test -w client && npm test -w dashboard",
+    "typecheck": "npm run typecheck -w client && npm run typecheck -w server && npm run typecheck -w dashboard",
+    "db:up": "docker compose up -d db",
+    "dev:dashboard": "npm run dev -w dashboard"
   },
   "devDependencies": {
     "concurrently": "^10.0.6"

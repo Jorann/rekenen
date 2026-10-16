@@ -9,7 +9,7 @@ iPad maths practice app for Nomi (8). See README.md for how it works and how to 
 
 ## Releasing
 
-A pushed `v*` tag publishes the Docker image; the Release workflow fails if `CHANGELOG.md` has no section for that version. To release:
+A pushed `v*` tag publishes the Docker images (app and dashboard); the Release workflow fails if `CHANGELOG.md` has no section for that version. To release:
 
 1. Pick the version with semver: patch for fixes, minor for new features, major for changes that need action on the server (e.g. config or data changes).
 2. In `CHANGELOG.md`, rename `## [Unreleased]` to `## [X.Y.Z] - YYYY-MM-DD`, add a fresh empty `## [Unreleased]` above it, and update the compare links at the bottom.
@@ -18,4 +18,4 @@ A pushed `v*` tag publishes the Docker image; the Release workflow fails if `CHA
 
 ## Data
 
-The Postgres database in the local `docker compose` stack holds Nomi's real sessions. Never test against it or clear it: create a separate database (e.g. `rekenen_test`) and point a server at it with `DATABASE_URL`.
+The Postgres database in the local `docker compose` stack holds Nomi's real sessions. Never test against it or clear it: create a separate database (e.g. `rekenen_test`) and point a server at it with `DATABASE_URL`. `npm run seed:demo -w dashboard` fills such a database with made-up practice; it refuses databases whose name doesn't end in `_test` or `_demo`.

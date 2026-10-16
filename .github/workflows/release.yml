@@ -1,6 +1,7 @@
-# Publishes the app as a Docker image to ghcr.io/jorann/rekenen when a version tag is pushed:
+# Publishes the app and the parent dashboard as Docker images when a version tag is pushed:
 #   git tag v1.2.0 && git push origin v1.2.0
-# produces the tags 1.2.0, 1.2, 1 and latest (pre-releases like v1.3.0-rc1 don't move latest).
+# ghcr.io/jorann/rekenen and ghcr.io/jorann/rekenen-dashboard each get the tags 1.2.0, 1.2, 1 and latest
+# (pre-releases like v1.3.0-rc1 don't move latest).
 # It then creates a GitHub release with that version's CHANGELOG.md section as the notes.
 name: Release
 
@@ -32,6 +33,13 @@ jobs:
     permissions:
       contents: read
       packages: write
+    strategy:
+      matrix:
+        include:
+          - image: ghcr.io/jorann/rekenen
+            dockerfile: Dockerfile
+          - image: ghcr.io/jorann/rekenen-dashboard
+            dockerfile: dashboard/Dockerfile
     steps:
       - uses: actions/checkout@v7
       - uses: docker/setup-qemu-action@v4
@@ -44,7 +52,7 @@ jobs:
       - id: meta
         uses: docker/metadata-action@v6
         with:
-          images: ghcr.io/jorann/rekenen
+          images: ${{ matrix.image }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -52,15 +60,16 @@ jobs:
       - uses: docker/build-push-action@v7
         with:
           context: .
+          file: ${{ matrix.dockerfile }}
           # amd64 for a typical server, arm64 for a Raspberry Pi or an Apple Silicon Mac.
           platforms: linux/amd64,linux/arm64
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}
 
-  # Once the image is out, publish a GitHub release whose notes are this version's changelog section.
+  # Once the images are out, publish a GitHub release whose notes are this version's changelog section.
   release:
     needs: image
     runs-on: ubuntu-latest

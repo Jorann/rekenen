@@ -17,4 +17,4 @@ awk -v v="$version" '
   }
 ' CHANGELOG.md
 
-printf '\n**Docker image:** `ghcr.io/jorann/rekenen:%s`\n' "$version"
+printf '\n**Docker images:** `ghcr.io/jorann/rekenen:%s` (app) and `ghcr.io/jorann/rekenen-dashboard:%s` (dashboard)\n' "$version" "$version"

@@ -5,6 +5,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 COPY client/package.json client/
 COPY server/package.json server/
+COPY dashboard/package.json dashboard/
 RUN npm ci
 COPY shared shared
 COPY client client
@@ -16,6 +17,7 @@ ENV NODE_ENV=production
 COPY package.json package-lock.json ./
 COPY client/package.json client/
 COPY server/package.json server/
+COPY dashboard/package.json dashboard/
 RUN npm ci --omit=dev --workspace server
 COPY shared shared
 COPY server server

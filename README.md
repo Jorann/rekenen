@@ -13,6 +13,8 @@ Tap Share → **Add to Home Screen** to open it full-screen like an app.
 
 Stop it with `docker compose down`. The data is kept in the `pgdata` volume. `docker compose down -v` deletes it.
 
+For the [parent dashboard](#parent-dashboard), add `COMPOSE_PROFILES=dashboard` and a `DASHBOARD_PASSWORD` to `.env`, run the same command, and open `http://<this-computer's-ip>:3001`.
+
 ## How it works
 
 - **Home screen:** her own character, her coins and what she is saving for, with three buttons: *Rekenen*, *Aankleden* and *Mijn plekje*.
@@ -32,9 +34,26 @@ Stop it with `docker compose down`. The data is kept in the `pgdata` volume. `do
 - **Prices** are in [`shared/catalog.ts`](shared/catalog.ts), which the server also uses to check every purchase. Changing a price doesn't change what she already paid. At about 5 seconds per sum a 15-minute session earns well over 100 coins; the whole shop is roughly 9,000.
 - **Where it's kept:** the server is the source of truth (Safari may clear an iPad web app's storage after a week without use). Buying also works without Wi-Fi: the iPad counts it straight away and sends it when the server is back, and the server checks the balance again.
 
+## Parent dashboard
+
+A separate service (its own container, port 3001) that reads the same database. It is in Dutch and shows, for the last 7, 30 or 90 days or everything:
+
+- **Kerncijfers:** sums solved, time practised, share right at the first try, median time per sum and days practised, each compared with the period before.
+- **Per dag:** sums per day (per week for long periods) by kind, and how first-try answers and speed develop.
+- **Tafels:** a 10 × 10 grid of every times-table sum, coloured by time or by first-try answers, plus a summary per table.
+- **Plus en min:** with and without going over a ten (8 + 5, 23 − 7), the step that is hard at first.
+- **Lastig:** her most common wrong answers and the slowest times-table sums.
+- **Muntjes:** her character as she made it, balance over time, what she bought, her wish, and a form to give or take coins with a note. A gift shows up in the app as a surprise.
+- **Sessies:** every session; click one for every sum and every answer she gave.
+
+Every chart has a *Tabel* button with the same numbers. It follows the device's light or dark mode, and days are counted in the viewer's time zone.
+
+- **Password:** `DASHBOARD_PASSWORD` in `.env`; the browser asks for it (any user name). In production the dashboard refuses to start without one. It is HTTP Basic, so put it behind HTTPS (a reverse proxy) if it is reachable from the internet.
+- **Read-only:** its database session is read-only. The only change it can make is a row in `coin_gifts`.
+
 ## Release and deploy
 
-Pushing a version tag builds the image (amd64 and arm64) and publishes it to `ghcr.io/jorann/rekenen`. Ordinary pushes build nothing.
+Pushing a version tag builds the images (amd64 and arm64) and publishes them to `ghcr.io/jorann/rekenen` (the app) and `ghcr.io/jorann/rekenen-dashboard`. Ordinary pushes build nothing.
 
 ```sh
 git tag v1.0.0 && git push origin v1.0.0   # publishes 1.0.0, 1.0, 1 and latest
@@ -50,6 +69,8 @@ docker compose -f docker-compose.prod.yml up -d
 ```
 
 To update after a new release: `docker compose -f docker-compose.prod.yml pull && docker compose -f docker-compose.prod.yml up -d`.
+
+The dashboard is optional: set `COMPOSE_PROFILES=dashboard` and `DASHBOARD_PASSWORD` in `.env` (see the example) and run the same commands; it listens on `DASHBOARD_PORT` (default 3001).
 
 The database is only reachable inside the compose network. To make a backup:
 
@@ -78,6 +99,12 @@ DATABASE_URL=postgres://rekenen:rekenen@localhost:5433/rekenen_test PORT=3100 np
 API_URL=http://localhost:3100 npm run dev -w client
 ```
 
+The dashboard has its own dev setup: `npm run dev:dashboard` runs its API on :3001 (database from `.env`, no password needed) and the page on :5190. Point it at another API with `DASHBOARD_API_URL`. To try it with eight weeks of made-up practice, fill a test database (it refuses any database not ending in `_test` or `_demo`):
+
+```sh
+DATABASE_URL=postgres://rekenen:rekenen@localhost:5433/rekenen_test npm run seed:demo -w dashboard
+```
+
 In development, `http://localhost:5180/#gallery` shows every drawing (character, clothes, pets, houses, garden) side by side; add `?slot=hat` (or `top`, `pet`, `home`, ...) to see one kind.
 
 ## Data
@@ -94,7 +121,7 @@ In development, `http://localhost:5180/#gallery` shows every drawing (character,
 
 Her balance is `solved sums + coin_gifts - purchases`; `GET /api/players/Nomi/profile` shows it.
 
-Read endpoints for the future dashboard: `GET /api/sessions` (summaries) and `GET /api/sessions/:id` (sums and attempts).
+The app server also has read endpoints: `GET /api/sessions` (summaries) and `GET /api/sessions/:id` (sums and attempts). The dashboard has its own API under `dashboard/server`.
 
 Some useful queries (`docker compose exec db psql -U rekenen`):
 
@@ -103,7 +130,7 @@ Some useful queries (`docker compose exec db psql -U rekenen`):
 SELECT operand_a || ' × ' || operand_b AS sum, round(avg(duration_ms) / 1000.0, 1) AS avg_seconds, count(*)
 FROM questions WHERE operation = 'mul' GROUP BY 1 ORDER BY 2 DESC LIMIT 10;
 
--- Give her coins, e.g. for helping at home. She gets a "cadeautje" message with the note.
+-- Give her coins, e.g. for helping at home (the dashboard has a form for this). She gets a "cadeautje" message with the note.
 INSERT INTO coin_gifts (player_id, amount, note) SELECT id, 25, 'Voor het opruimen van je kamer' FROM players WHERE name = 'Nomi';
 
 -- Undo a purchase she regrets: she gets the coins back and the item disappears.

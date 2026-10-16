@@ -30,5 +30,19 @@ services:
       db:
         condition: service_healthy
 
+  # The parent dashboard (optional). Runs with COMPOSE_PROFILES=dashboard and a DASHBOARD_PASSWORD in .env.
+  dashboard:
+    image: ghcr.io/jorann/rekenen-dashboard:${REKENEN_VERSION:-latest}
+    profiles: [dashboard]
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://rekenen:${POSTGRES_PASSWORD}@db:5432/rekenen
+      DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD:-}
+    ports:
+      - "${DASHBOARD_PORT:-3001}:3001"
+    depends_on:
+      app:
+        condition: service_healthy
+
 volumes:
   pgdata:

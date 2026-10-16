@@ -1,0 +1,825 @@
+/*
+ * Colours are roles, defined once per mode. Dark mode has its own validated steps, not an automatic flip:
+ * the OS setting picks it, and data-theme="light" / "dark" on <html> overrides the OS either way.
+ */
+:root {
+  color-scheme: light;
+  --page: #f9f9f7;
+  --surface-1: #fcfcfb;
+  --surface-2: #f3f2ee;
+  --text-primary: #0b0b0b;
+  --text-secondary: #52514e;
+  --muted: #898781;
+  --grid: #e1e0d9;
+  --axis: #c3c2b7;
+  --success: #006300;
+  --border: rgba(11, 11, 11, 0.1);
+  --focus: #2a78d6;
+
+  /* Categorical slots 1-3 (validated all-pairs): minus, plus, keer. */
+  --series-1: #2a78d6;
+  --series-2: #eb6834;
+  --series-3: #1baf7a;
+
+  /* Ordinal blue ramp for the times-table grid, easy to hard. */
+  --seq-1: #86b6ef;
+  --seq-2: #5598e7;
+  --seq-3: #2a78d6;
+  --seq-4: #1c5cab;
+  --seq-5: #0d366b;
+
+  --radius: 14px;
+  --font: system-ui, -apple-system, 'Segoe UI', sans-serif;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme='light'])) {
+    color-scheme: dark;
+    --page: #0d0d0d;
+    --surface-1: #1a1a19;
+    --surface-2: #232321;
+    --text-primary: #f0efec;
+    --text-secondary: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --success: #0ca30c;
+    --border: rgba(255, 255, 255, 0.1);
+    --focus: #3987e5;
+    --series-1: #3987e5;
+    --series-2: #d95926;
+    --series-3: #199e70;
+    --seq-1: #184f95;
+    --seq-2: #256abf;
+    --seq-3: #3987e5;
+    --seq-4: #6da7ec;
+    --seq-5: #b7d3f6;
+  }
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --page: #0d0d0d;
+  --surface-1: #1a1a19;
+  --surface-2: #232321;
+  --text-primary: #f0efec;
+  --text-secondary: #c3c2b7;
+  --muted: #898781;
+  --grid: #2c2c2a;
+  --axis: #383835;
+  --success: #0ca30c;
+  --border: rgba(255, 255, 255, 0.1);
+  --focus: #3987e5;
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --seq-1: #184f95;
+  --seq-2: #256abf;
+  --seq-3: #3987e5;
+  --seq-4: #6da7ec;
+  --seq-5: #b7d3f6;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--page);
+  color: var(--text-primary);
+  font: 15px/1.45 var(--font);
+}
+
+button,
+input,
+select {
+  font: inherit;
+  color: inherit;
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.muted {
+  color: var(--muted);
+}
+
+.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Page ---------- */
+
+.page {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 24px 16px 64px;
+}
+
+.page-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 16px;
+}
+
+.brand {
+  margin: 0;
+  font-size: 26px;
+  font-weight: 600;
+}
+
+/* The app's rainbow name, the one place the playful face appears. */
+.rainbow {
+  font-family: 'Fredoka', var(--font);
+}
+
+.r0 { color: #ff5e7e; }
+.r1 { color: #ff9f43; }
+.r2 { color: #f2b600; }
+.r3 { color: #3fc97a; }
+.r4 { color: #4d96ff; }
+.r5 { color: #9b5de5; }
+
+.brand-sub {
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.last-played {
+  margin: 0;
+  color: var(--text-secondary);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 16px 0 20px;
+}
+
+.segmented {
+  display: inline-flex;
+  padding: 3px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+}
+
+.segmented button {
+  border: 0;
+  border-radius: 7px;
+  padding: 6px 12px;
+  background: transparent;
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.segmented button:hover {
+  color: var(--text-primary);
+}
+
+.segmented button[aria-pressed='true'] {
+  background: var(--surface-1);
+  color: var(--text-primary);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.field.inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+
+.field input,
+.field select {
+  min-height: 36px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface-1);
+  color: var(--text-primary);
+  font-size: 15px;
+}
+
+.field.small input {
+  width: 90px;
+}
+
+.banner {
+  padding: 14px 16px;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  color: var(--text-secondary);
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  align-items: start;
+  transition: opacity 0.2s;
+}
+
+/* While new numbers load, the old ones stay in place, a little faded. No skeletons, no jumping. */
+.board.refreshing {
+  opacity: 0.55;
+}
+
+.wide,
+.kpis,
+.section-title {
+  grid-column: 1 / -1;
+}
+
+.section-title {
+  margin: 20px 0 -4px;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+@media (max-width: 860px) {
+  .board {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* ---------- Cards ---------- */
+
+.card {
+  margin: 0;
+  padding: 16px 18px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-1);
+  min-width: 0;
+}
+
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.card-sub {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.ghost-btn {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 5px 10px;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.ghost-btn:hover {
+  background: var(--surface-2);
+  color: var(--text-primary);
+}
+
+.primary-btn {
+  min-height: 36px;
+  border: 0;
+  border-radius: 8px;
+  padding: 7px 16px;
+  background: var(--series-1);
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.primary-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.empty {
+  margin: 8px 0;
+  color: var(--text-secondary);
+}
+
+/* ---------- Stat tiles ---------- */
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.stat-tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.stat-delta {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.stat-delta.good {
+  color: var(--success);
+}
+
+/* ---------- Charts ---------- */
+
+.chart {
+  position: relative;
+  width: 100%;
+}
+
+.chart svg {
+  display: block;
+  overflow: visible;
+  touch-action: pan-y;
+}
+
+.chart svg:focus-visible {
+  outline-offset: 4px;
+  border-radius: 4px;
+}
+
+.chart .grid {
+  stroke: var(--grid);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+.chart .axis {
+  stroke: var(--axis);
+  stroke-width: 1;
+  shape-rendering: crispEdges;
+}
+
+.chart .crosshair {
+  stroke: var(--axis);
+  stroke-width: 1;
+}
+
+.chart .tick {
+  fill: var(--muted);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart .row-label {
+  fill: var(--text-secondary);
+  font-size: 13px;
+}
+
+.chart .value-label,
+.chart .end-label {
+  fill: var(--text-primary);
+  font-size: 13px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Dots carry a ring in the surface colour so they stay readable where they cross the line. */
+.chart .dot {
+  stroke: var(--surface-1);
+  stroke-width: 2;
+}
+
+.chart .dim {
+  opacity: 0.45;
+}
+
+.legend,
+.scale-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin: 0 0 8px;
+  padding: 0;
+  list-style: none;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.scale-legend {
+  margin: 12px 0 0;
+}
+
+.legend li,
+.scale-legend li {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.rect-key {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
+}
+
+.rect-key.none {
+  border: 1px solid var(--axis);
+  background: var(--surface-1);
+}
+
+.line-key {
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  border-radius: 1px;
+}
+
+.tooltip {
+  position: absolute;
+  z-index: 5;
+  min-width: 140px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface-1);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.14);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.tooltip.above {
+  transform: translateY(-100%);
+}
+
+.tooltip-title {
+  margin-bottom: 4px;
+  color: var(--text-secondary);
+}
+
+.tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  white-space: nowrap;
+}
+
+.tooltip-row strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.tooltip-row span:last-child {
+  color: var(--text-secondary);
+}
+
+/* ---------- Times-table grid ---------- */
+
+.heatmap {
+  position: relative;
+  display: grid;
+  grid-template-columns: 52px repeat(10, minmax(0, 40px));
+  gap: 2px;
+  max-width: 470px;
+}
+
+.heat-row {
+  display: contents;
+}
+
+.heat-corner,
+.heat-col,
+.heat-head {
+  font-size: 12px;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.heat-col {
+  text-align: center;
+  padding-bottom: 2px;
+}
+
+.heat-head {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 8px;
+}
+
+.heat-cell {
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 4px;
+  padding: 0;
+  cursor: default;
+}
+
+.heat-cell.none {
+  background: var(--surface-1);
+  box-shadow: inset 0 0 0 1px var(--grid);
+}
+
+.heat-cell.on {
+  box-shadow: 0 0 0 2px var(--surface-1), 0 0 0 4px var(--text-primary);
+}
+
+/* ---------- Tables ---------- */
+
+.table-view,
+.table-scroll {
+  max-height: 420px;
+  overflow: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.data-table th {
+  position: sticky;
+  top: 0;
+  background: var(--surface-1);
+  color: var(--text-secondary);
+  font-weight: 500;
+  text-align: left;
+  font-size: 13px;
+}
+
+.data-table th.num {
+  text-align: right;
+}
+
+.data-table th,
+.data-table td {
+  padding: 7px 8px;
+  border-bottom: 1px solid var(--grid);
+}
+
+.data-table td:first-child {
+  white-space: nowrap;
+}
+
+.table-scroll .data-table {
+  min-width: 680px;
+}
+
+.data-table.clickable tbody tr {
+  cursor: pointer;
+}
+
+.data-table.clickable tbody tr:hover {
+  background: var(--surface-2);
+}
+
+.wrong {
+  color: var(--text-secondary);
+  text-decoration: line-through;
+}
+
+/* ---------- Sessions ---------- */
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 16px;
+  background: rgba(0, 0, 0, 0.35);
+  overflow: auto;
+}
+
+.dialog {
+  width: min(720px, 100%);
+}
+
+.round + .round {
+  margin-top: 12px;
+}
+
+.round-title {
+  margin: 16px 0 6px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.sum-cell {
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.attempt {
+  display: inline-block;
+  min-width: 34px;
+  margin-right: 4px;
+  padding: 1px 7px;
+  border-radius: 6px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.attempt.right {
+  background: var(--surface-2);
+  font-weight: 600;
+}
+
+.attempt.wrong {
+  border: 1px solid var(--grid);
+}
+
+/* ---------- Coins ---------- */
+
+.coins-card {
+  display: grid;
+  grid-template-columns: 200px minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+
+@media (max-width: 640px) {
+  .coins-card {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* Her character, framed in the app's pastel sky. */
+.portrait {
+  position: relative;
+  width: 100%;
+  max-width: 220px;
+  margin: 0 auto;
+  aspect-ratio: 3 / 4;
+  border-radius: var(--radius);
+  background: linear-gradient(160deg, #ffd6ec 0%, #eadcff 45%, #cfeaff 100%);
+  padding: 10px 10px 4px;
+}
+
+.portrait .avatar {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.portrait-pet {
+  position: absolute;
+  right: 4px;
+  bottom: 6px;
+  width: 34%;
+}
+
+.mini-stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 14px 0;
+}
+
+.mini {
+  display: flex;
+  flex-direction: column;
+}
+
+.mini-value {
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.wish {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+}
+
+.wish-thumb {
+  flex: none;
+  width: 56px;
+  height: 56px;
+}
+
+.wish-thumb .thumb,
+.purchase-thumb .thumb,
+.purchase-thumb .pet,
+.wish-thumb .pet {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.wish-text {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* The unfilled track is a lighter step of the same hue. */
+.meter {
+  height: 8px;
+  border-radius: 4px;
+  background: color-mix(in srgb, var(--series-1) 20%, var(--surface-1));
+  overflow: hidden;
+}
+
+.meter div {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--series-1);
+}
+
+.purchases {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.purchases li {
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto 48px;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 0;
+  border-bottom: 1px solid var(--grid);
+}
+
+.purchase-thumb {
+  width: 40px;
+  height: 40px;
+}
+
+.purchase-name {
+  overflow: hidden;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gift-form {
+  margin-top: 16px;
+}
+
+.gift-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.gift-row .field:not(.small) {
+  flex: 1;
+  min-width: 200px;
+}
+
+.form-note {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.form-note.good {
+  color: var(--success);
+}

@@ -5,6 +5,13 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+### Added
+
+- A dashboard for you, in Dutch, as a separate service on port 3001 that reads the same database. It shows how much Nomi practised, how often she gets sums right the first time, and how fast she is, per day or week and compared with the period before.
+- In the dashboard, a grid of all times-table sums that shows which ones are slow or often wrong, plus and min split by going over a ten, her most common wrong answers, and every session with every answer she gave.
+- Her character, coins, purchases and wish in the dashboard, with a form to give her coins (or take some back) with a note. She sees a gift as a surprise in the app.
+- The dashboard asks for the password in `DASHBOARD_PASSWORD` and can only add coin gifts; everything else is read-only. It is optional: set `COMPOSE_PROFILES=dashboard` and the password in `.env` to run it. Without them nothing changes on the server.
+
 ## [1.1.0] - 2026-10-16
 
 ### Added

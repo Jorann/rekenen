@@ -28,5 +28,21 @@ services:
       db:
         condition: service_healthy
 
+  # The parent dashboard, on port 3001. Only with COMPOSE_PROFILES=dashboard and DASHBOARD_PASSWORD in .env.
+  dashboard:
+    build:
+      context: .
+      dockerfile: dashboard/Dockerfile
+    profiles: [dashboard]
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgres://rekenen:rekenen@db:5432/rekenen
+      DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD:-}
+    ports:
+      - "3001:3001"
+    depends_on:
+      app:
+        condition: service_healthy
+
 volumes:
   pgdata:
