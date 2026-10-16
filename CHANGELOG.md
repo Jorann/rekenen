@@ -5,6 +5,8 @@ The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and 
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-16
+
 ### Added
 
 - Nomi earns a coin for every sum she solves, including the sums she already did. During the game each coin flies into her purse, and the end of every round and game shows how many she earned.
@@ -37,5 +39,6 @@ First release.
 - The player is always Nomi. The name field can be turned back on with `ASK_NAME` in `client/src/config.ts`.
 - A Docker image is published to GitHub for every version tag, with a production compose file to run it on a server.
 
-[Unreleased]: https://github.com/Jorann/rekenen/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/Jorann/rekenen/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/Jorann/rekenen/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/Jorann/rekenen/releases/tag/v1.0.0
